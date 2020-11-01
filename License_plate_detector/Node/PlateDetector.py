@@ -1,9 +1,19 @@
 import cv2
 import numpy as np
 
+
 class PlateDetector():
 
-    def __init__(self, dy1=0.06, dy2=0.06):
+    def __init__(self, dy1=0.06, dy2=0.08):
+        """
+        keyword arguments:
+
+        dy1 -- given a bounding rectangle, determines how much to
+        shift the top edge of the rectangle down to remove white space
+        
+        dy2 -- given a bounding rectangle, determines how much to 
+        shift the bottom edge down so the liscene plate is included
+        """
         self._dy1 = dy1
         self._dy2 = dy2
         pass
@@ -121,9 +131,18 @@ class PlateDetector():
 
 
 if __name__ == "__main__":
+    
     bob = PlateDetector()
+    import imageio
 
-    for i in range(1, 9):
-        img = cv2.imread(
-            '/home/fizzer/Videos/Lisence_detector_data/{}.jpg'.format(i))
-        bob.get_label_img(img, debug=True)
+    for v in range(1, 6):
+       
+        vid = imageio.get_reader("/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/Test{}.mp4".format(v),
+                                    'ffmpeg')
+
+        result_path = "/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/Test{}_result".format(v)
+        
+        for i, im in enumerate(vid):
+            result = bob.get_label_img(im)
+            if result is not None:
+                cv2.imwrite(result_path + "/label_{}.jpg".format(i), result)
