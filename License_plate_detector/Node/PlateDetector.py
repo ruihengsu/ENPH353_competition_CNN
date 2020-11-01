@@ -4,7 +4,7 @@ import numpy as np
 
 class PlateDetector():
 
-    def __init__(self, dy1=0.06, dy2=0.08):
+    def __init__(self, dy1=0.07, dy2=0.09):
         """
         keyword arguments:
 
@@ -19,7 +19,7 @@ class PlateDetector():
         pass
 
     def _get_blue_mask(self, img):
-        hsv = cv2.cvtColor(img.copy(), cv2.COLOR_RGB2HSV)
+        hsv = cv2.cvtColor(img.copy(), cv2.COLOR_BGR2HSV)
 
         l_range = np.array([100, 50, 100])
         u_range = np.array([130, 255, 140])
@@ -33,7 +33,7 @@ class PlateDetector():
         hsv = cv2.cvtColor(img.copy(), cv2.COLOR_BGR2HSV)
 
         l_range = np.array([0, 0, 100])
-        u_range = np.array([255, 20, 250])
+        u_range = np.array([0, 20, 250])
 
         mask = cv2.inRange(hsv, l_range, u_range)
         return mask
@@ -66,15 +66,19 @@ class PlateDetector():
     def _validate(self, license_plate, debug=False):
         bw = cv2.threshold(license_plate.copy(), 225,
                            255, cv2.THRESH_BINARY)[1]
+        # cv2.imshow("val", bw)
+        # cv2.waitKey(300)
         bmask = self._get_blue_mask(license_plate)
 
         blue_hist = np.sum(bmask, axis=1)
         max_blue_row = np.argmax(blue_hist)
 
-        max_blue_near_edge = max_blue_row < int(
-            len(blue_hist)/4.) or max_blue_row > int(3.0*len(blue_hist)/4.)
+        max_blue_near_top_edge = max_blue_row < int(
+            len(blue_hist)/4.)
 
-        if np.sum(bw) > 0 or np.sum(bmask) < 7000 or max_blue_near_edge:
+        blue_bottom_edge = blue_hist[-1] + blue_hist[-2] + blue_hist[-3] != 0
+
+        if np.sum(bw) > 4000 or np.sum(bmask) < 6000 or max_blue_near_top_edge or blue_bottom_edge:
             return False
         else:
             return True
@@ -94,7 +98,7 @@ class PlateDetector():
             max_list = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
             for mac_c in max_list:
 
-                if self._check_contour(mac_c, img, debug=debug):
+                if self._check_contour(mac_c, img):
                     x, y, w, h = cv2.boundingRect(mac_c)
                     y1 = y+int(self._dy1*y)
                     y2 = y+h+int(self._dy2*y)
@@ -143,22 +147,38 @@ class PlateDetector():
 if __name__ == "__main__":
 
     bob = PlateDetector()
-    
+    # img = cv2.imread("/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/9.jpg")
+    # result = bob.get_label_img(img, True)
+    # print(result)
+
     import imageio
     import logging
+    import os
+    import glob
+
     logging.basicConfig(level=logging.DEBUG)
     
-    for v in [1, 2, 3, 4, 5]:
 
+    for v in [5]:
+         
         vid = imageio.get_reader("/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/Test{}.mp4".format(v),
                                  'ffmpeg')
 
         result_path = "/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/Test{}_result".format(
             v)
+        try:
+            os.mkdir(result_path)
+        except:
+            pass
+        files = glob.glob(result_path + "/*")
+        for f in files:
+            # print(f)
+            os.remove(f)
 
         for i, im in enumerate(vid):
-            result = bob.get_label_img(im)
+            img = cv2.cvtColor(im.copy(), cv2.COLOR_RGB2BGR)
+            result = bob.get_label_img(img)
             if result is not None:
                 cv2.imwrite(result_path + "/label_{}.jpg".format(i),
-                            cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+                            result)
         logging.debug("Test {} completed".format(v))
