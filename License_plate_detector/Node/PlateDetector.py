@@ -21,8 +21,8 @@ class PlateDetector():
     def _get_blue_mask(self, img):
         hsv = cv2.cvtColor(img.copy(), cv2.COLOR_BGR2HSV)
 
-        l_range = np.array([100, 50, 100])
-        u_range = np.array([130, 255, 140])
+        l_range = np.array([100, 50, 50])
+        u_range = np.array([130, 255, 255])
 
         mask = cv2.inRange(hsv, l_range, u_range)
 
@@ -39,25 +39,28 @@ class PlateDetector():
         return mask
 
     def _check_contour(self, contour, img, debug=False):
-
+        """
+        This function needs to be hand-tuned
+        """
         area = cv2.contourArea(contour)
 
         x, y, w, h = cv2.boundingRect(contour)
 
-        cond1 = w > 50 and w < 210
-        cond2 = h > 60 and h < 250
-        cond3 = area > 4000 and area < 80000
+        cond1 = w > 50 and w < 400
+        cond2 = h > 50 and h < 300
+        cond3 = area > 3000 and area < 80000
         cond4 = x > 0 and x+w > 0
-        cond5 = float(h)/w < 1.4
+        cond5 = float(h)/w < 1.6
 
         if debug == True:
             print("Checking: ")
-            print(cond1)
-            print(cond2)
+            print("w: {} h:{}".format(w,h))
+            print("Area: {}".format(area))
             print(cond3)
             print(area)
             print(cond4)
             print(cond5)
+        
         if cond1 and cond2 and cond3 and cond4 and cond5:
             return True
         else:
@@ -75,10 +78,17 @@ class PlateDetector():
 
         max_blue_near_top_edge = max_blue_row < int(
             len(blue_hist)/4.)
+        
+        try:
+            blue_bottom_edge = blue_hist[-1] + blue_hist[-2] + blue_hist[-3] != 0
+        except:
+            return False 
+        # print(np.sum(bw))
+        # print(np.sum(bmask))
+        # print(max_blue_near_top_edge)
+        # print(blue_bottom_edge)
 
-        blue_bottom_edge = blue_hist[-1] + blue_hist[-2] + blue_hist[-3] != 0
-
-        if np.sum(bw) > 4000 or np.sum(bmask) < 6000 or max_blue_near_top_edge or blue_bottom_edge:
+        if np.sum(bw) > 4000 or np.sum(bmask) < 5000 or max_blue_near_top_edge or blue_bottom_edge:
             return False
         else:
             return True
@@ -95,10 +105,10 @@ class PlateDetector():
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) >= 5:
-            max_list = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+            max_list = sorted(contours, key=cv2.contourArea, reverse=True)[:3]
             for mac_c in max_list:
 
-                if self._check_contour(mac_c, img):
+                if self._check_contour(mac_c, img, debug=debug):
                     x, y, w, h = cv2.boundingRect(mac_c)
                     y1 = y+int(self._dy1*y)
                     y2 = y+h+int(self._dy2*y)
@@ -123,7 +133,7 @@ class PlateDetector():
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) >= 5:
-            max_list = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+            max_list = sorted(contours, key=cv2.contourArea, reverse=True)[:3]
             for mac_c in max_list:
 
                 if self._check_contour(mac_c, img, debug=debug):
@@ -133,6 +143,10 @@ class PlateDetector():
                     x1 = x
                     x2 = x+w
                     license_plate = img[y1:y2, x:x+w]
+
+                    # self._validate(license_plate)
+                    # return license_plate
+                    
                     if self._validate(license_plate):
                         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
                         if debug == True:
@@ -141,7 +155,7 @@ class PlateDetector():
 
                         return img
 
-        return img
+        return None
 
 
 if __name__ == "__main__":
@@ -159,7 +173,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     
 
-    for v in [5]:
+    for v in [1,2,3,4,5,6]:
          
         vid = imageio.get_reader("/home/fizzer/ENPH353_competition_CNN/License_plate_detector/Detector_data/Test{}.mp4".format(v),
                                  'ffmpeg')
@@ -177,7 +191,7 @@ if __name__ == "__main__":
 
         for i, im in enumerate(vid):
             img = cv2.cvtColor(im.copy(), cv2.COLOR_RGB2BGR)
-            result = bob.get_label_img(img)
+            result = bob.get_label_img(img,False)
             if result is not None:
                 cv2.imwrite(result_path + "/label_{}.jpg".format(i),
                             result)
