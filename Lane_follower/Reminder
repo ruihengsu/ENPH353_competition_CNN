@@ -1,0 +1,8 @@
+Hello :)
+
+- Remember to make DrivingRecorder.py an executable
+- The linear speed should be: 0.55 
+- The angular speed should be: 5.05447028499
+- Remember to move the data to a new folder everytime you run the simulation, otherwise the data will be overwritten! (Unless you decide to have a separate launch file for the DrivingRecorder node)
+
+
