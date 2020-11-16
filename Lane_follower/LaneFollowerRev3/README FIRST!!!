@@ -1,0 +1,36 @@
+How to control the robot:
+
+ONLY USE "k" (linear = 0, angular = 0) to stop the robot when at the crosswalk or in the inner path so the robot does not ram into the car
+
+NEVER USE "j" or "l": the robot should never have 0 linear velocity but nonzero angular velocity. (robot should never turn in place) 
+
+At turns, some combination of "u/o" (these make the robot turn) and "i" (going straight). 
+
+
+- On straight path
+	- Correct for being in the white lines but going slightly off
+	- Correct for going on the green
+	
+- When at cross walk
+	- Only go when the pedestrian is *far* off the road
+	- Stop when pedstrian is in the middle
+	- Sometimes the car will be at a weird angle at the intersection. What to do here. 
+
+- At inner path
+	- When there is no inner car 
+	- When there is inner car (learning to stop when behind inner car), keep a *generous* distance
+	- Recovering for going onto the green path (this also has multiple cases)
+	
+- Going in and coming out the inner path
+	- With no inner car around
+	- With inner car  
+
+- At turns
+	- Turn nicely. This can often be done using a single press of "u" or "o"
+
+- Ramming into
+	- Trees
+	- Parked cars
+	- World boundary
+	Only have images where we are recovering from them
+
