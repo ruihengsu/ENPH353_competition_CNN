@@ -1,0 +1,14 @@
+Add: PlateReader.py to nodes folder
+	- This node subscribes to "plate" topic
+	- Uses 2 CNNs to predict parking spot and license plate number
+	- Publishes prediction to license_plate node
+Add: one_hot.py to nodes folder
+	- Some image processing functions
+Add: PlateReader.py to nodes folder
+	- Made a few modifications to work with plate reader
+	- Only returns detected image of plate 
+Add: process_image.py to nodes folder
+	- Made a few modifications to work with plate reader
+	- Just changed name of topic it publishes to: "plate"
+Add: ps_model to scripts folder
+	- CNN to predict the parking spot number 
